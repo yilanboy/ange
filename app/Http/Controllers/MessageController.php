@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Ai\Agents\Ange;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Laravel\Ai\Enums\Lab;
 
@@ -30,6 +31,15 @@ class MessageController extends Controller
 
         Log::info((string) $response);
 
-        return response();
+        $chatId = $request->input('message.chat.id') ?? $request->input('callback_query.message.chat.id') ?? config('services.telegram.chat_id');
+
+        if ($chatId) {
+            Http::post('https://api.telegram.org/bot'.config('services.telegram.bot_token').'/sendMessage', [
+                'chat_id' => $chatId,
+                'text' => (string) $response,
+            ]);
+        }
+
+        return response()->json(['message' => (string) $response]);
     }
 }
