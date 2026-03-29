@@ -28,6 +28,8 @@ class MessageController extends Controller
         $response = Ange::make()
             ->prompt($text, provider: Lab::Gemini);
 
-        return (string) $response;
+        Log::info((string) $response);
+
+        return response();
     }
 }
