@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Ai\Agents\Ange;
 use App\Models\History;
 use App\Services\TelegramService;
+use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -35,12 +36,17 @@ class ProcessTelegramWebhookJob implements ShouldQueue
 
         $messageId = $placeholder['result']['message_id'] ?? null;
 
-        $response = Ange::make($this->chatId)
-            ->prompt($this->text, provider: Lab::Gemini);
+        try {
+            $response = Ange::make($this->chatId)
+                ->prompt($this->text, provider: Lab::Gemini);
+        } catch (Exception $exception) {
+            Log::error("AI model went wrong: ", [get_class($exception), $exception->getMessage()]);
+            $response = "I'm sorry, I couldn't process your request at the moment.";
+        }
 
         History::create([
             'chat_id' => $this->chatId,
-            'role' => 'user',
+            'role'    => 'user',
             'content' => $this->text,
         ]);
 
@@ -52,7 +58,7 @@ class ProcessTelegramWebhookJob implements ShouldQueue
 
         History::create([
             'chat_id' => $this->chatId,
-            'role' => 'assistant',
+            'role'    => 'assistant',
             'content' => (string) $response,
         ]);
     }
