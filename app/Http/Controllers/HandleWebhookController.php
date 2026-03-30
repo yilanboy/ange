@@ -20,7 +20,7 @@ class HandleWebhookController extends Controller
             return response()->json(['message' => 'No chat ID found']);
         }
 
-        ProcessTelegramWebhookJob::dispatch($chatId, $text)->afterResponse();
+        ProcessTelegramWebhookJob::dispatch($chatId, $text);
 
         Log::info('Send response first');
 
