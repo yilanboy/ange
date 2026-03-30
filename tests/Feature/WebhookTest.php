@@ -50,7 +50,7 @@ test('it handles successful webhook and calls telegram service', function () {
     $this->mock(TelegramService::class, function ($mock) {
         $mock->shouldReceive('sendMessage')
             ->once()
-            ->with(123, 'Ange is thinking ⏳')
+            ->with(123, "I'm thinking... ⏳")
             ->andReturn(['result' => ['message_id' => 456]]);
 
         $mock->shouldReceive('editMessageText')
@@ -68,7 +68,7 @@ test('it handles successful webhook and calls telegram service', function () {
         ]);
 
     $response->assertOk();
-    $response->assertJson(['message' => 'Fake response for prompt: Hello']);
+    $response->assertJson(['message' => 'ok']);
 
     $this->assertDatabaseHas('histories', [
         'chat_id' => '123',
@@ -91,7 +91,7 @@ test('it handles successful webhook and falls back to sendMessage if thinking me
     $this->mock(TelegramService::class, function ($mock) {
         $mock->shouldReceive('sendMessage')
             ->once()
-            ->with(123, 'Ange is thinking ⏳')
+            ->with(123, "I'm thinking... ⏳")
             ->andReturn([]); // No message_id
 
         $mock->shouldReceive('sendMessage')
@@ -109,7 +109,7 @@ test('it handles successful webhook and falls back to sendMessage if thinking me
         ]);
 
     $response->assertOk();
-    $response->assertJson(['message' => 'Fake response for prompt: Hello']);
+    $response->assertJson(['message' => 'ok']);
 
     Ange::assertPrompted('Hello');
 });

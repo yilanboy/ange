@@ -14,7 +14,7 @@ class HandleWebhookController extends Controller
     /**
      * Handle the incoming request.
      */
-    public function __invoke(WebhookRequest $request, TelegramService $telegram)
+    public function __invoke(WebhookRequest $request)
     {
         $text = $request->input('message.text');
         $chatId = $request->input('message.chat.id');
@@ -23,33 +23,37 @@ class HandleWebhookController extends Controller
             return response()->json(['message' => 'No chat ID found']);
         }
 
-        History::create([
-            'chat_id' => $chatId,
-            'role'    => 'user',
-            'content' => $text,
-        ]);
+        dispatch(function () use ($chatId, $text) {
+            $telegram = app()->make(TelegramService::class);
 
-        $placeholder = $telegram->sendMessage($chatId, "I'm thinking... ⏳");
+            $placeholder = $telegram->sendMessage($chatId, "I'm thinking... ⏳");
 
-        Log::info('Check placeholder: ', $placeholder);
+            Log::info('Check placeholder: ', $placeholder);
 
-        $messageId = $placeholder['result']['message_id'] ?? null;
+            $messageId = $placeholder['result']['message_id'] ?? null;
 
-        $response = Ange::make($chatId)
-            ->prompt($text, provider: Lab::Gemini);
+            $response = Ange::make($chatId)
+                ->prompt($text, provider: Lab::Gemini);
 
-        if ($messageId) {
-            $telegram->editMessageText($chatId, $messageId, (string) $response);
-        } else {
-            $telegram->sendMessage($chatId, (string) $response);
-        }
+            History::create([
+                'chat_id' => $chatId,
+                'role'    => 'user',
+                'content' => $text,
+            ]);
 
-        History::create([
-            'chat_id' => $chatId,
-            'role'    => 'assistant',
-            'content' => (string) $response,
-        ]);
+            if ($messageId) {
+                $telegram->editMessageText($chatId, $messageId, (string) $response);
+            } else {
+                $telegram->sendMessage($chatId, (string) $response);
+            }
 
-        return response()->json(['message' => (string) $response]);
+            History::create([
+                'chat_id' => $chatId,
+                'role'    => 'assistant',
+                'content' => (string) $response,
+            ]);
+        })->afterResponse();
+
+        return response()->json(['message' => 'ok']);
     }
 }
