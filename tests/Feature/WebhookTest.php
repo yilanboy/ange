@@ -50,7 +50,12 @@ test('it handles successful webhook and calls telegram service', function () {
     $this->mock(TelegramService::class, function ($mock) {
         $mock->shouldReceive('sendMessage')
             ->once()
-            ->with(123, 'Fake response for prompt: Hello')
+            ->with(123, 'Ange is thinking ⏳')
+            ->andReturn(['result' => ['message_id' => 456]]);
+
+        $mock->shouldReceive('editMessageText')
+            ->once()
+            ->with(123, 456, 'Fake response for prompt: Hello')
             ->andReturn([]);
     });
 
@@ -76,6 +81,35 @@ test('it handles successful webhook and calls telegram service', function () {
         'role' => 'assistant',
         'content' => 'Fake response for prompt: Hello',
     ]);
+
+    Ange::assertPrompted('Hello');
+});
+
+test('it handles successful webhook and falls back to sendMessage if thinking message fails', function () {
+    Ange::fake();
+
+    $this->mock(TelegramService::class, function ($mock) {
+        $mock->shouldReceive('sendMessage')
+            ->once()
+            ->with(123, 'Ange is thinking ⏳')
+            ->andReturn([]); // No message_id
+
+        $mock->shouldReceive('sendMessage')
+            ->once()
+            ->with(123, 'Fake response for prompt: Hello')
+            ->andReturn([]);
+    });
+
+    $response = $this->withHeader('X-Telegram-Bot-Api-Secret-Token', 'test-secret-token')
+        ->postJson('/webhook', [
+            'message' => [
+                'text' => 'Hello',
+                'chat' => ['id' => 123],
+            ],
+        ]);
+
+    $response->assertOk();
+    $response->assertJson(['message' => 'Fake response for prompt: Hello']);
 
     Ange::assertPrompted('Hello');
 });

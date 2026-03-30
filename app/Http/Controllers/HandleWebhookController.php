@@ -6,6 +6,7 @@ use App\Ai\Agents\Ange;
 use App\Http\Requests\WebhookRequest;
 use App\Models\History;
 use App\Services\TelegramService;
+use Illuminate\Support\Facades\Log;
 use Laravel\Ai\Enums\Lab;
 
 class HandleWebhookController extends Controller
@@ -22,20 +23,30 @@ class HandleWebhookController extends Controller
             return response()->json(['message' => 'No chat ID found']);
         }
 
-        $response = Ange::make($chatId)
-            ->prompt($text, provider: Lab::Gemini);
-
         History::create([
             'chat_id' => $chatId,
-            'role' => 'user',
+            'role'    => 'user',
             'content' => $text,
         ]);
 
-        $telegram->sendMessage($chatId, (string) $response);
+        $placeholder = $telegram->sendMessage($chatId, 'Ange is thinking... ⏳');
+
+        Log::info('Check placeholder: ', $placeholder);
+
+        $messageId = $placeholder['result']['message_id'] ?? null;
+
+        $response = Ange::make($chatId)
+            ->prompt($text, provider: Lab::Gemini);
+
+        if ($messageId) {
+            $telegram->editMessageText($chatId, $messageId, (string) $response);
+        } else {
+            $telegram->sendMessage($chatId, (string) $response);
+        }
 
         History::create([
             'chat_id' => $chatId,
-            'role' => 'assistant',
+            'role'    => 'assistant',
             'content' => (string) $response,
         ]);
 
