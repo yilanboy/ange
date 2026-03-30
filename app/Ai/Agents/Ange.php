@@ -2,6 +2,7 @@
 
 namespace App\Ai\Agents;
 
+use App\Models\History;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Contracts\HasTools;
@@ -15,11 +16,16 @@ class Ange implements Agent, Conversational, HasTools
     use Promptable;
 
     /**
+     * Create a new agent instance.
+     */
+    public function __construct(public ?string $chatId = null) {}
+
+    /**
      * Get the instructions that the agent should follow.
      */
     public function instructions(): Stringable|string
     {
-        return 'You are a helpful assistant.';
+        return 'You are a helpful assistant that uses Telegram to talk with the user.';
     }
 
     /**
@@ -29,7 +35,18 @@ class Ange implements Agent, Conversational, HasTools
      */
     public function messages(): iterable
     {
-        return [];
+        if (! $this->chatId) {
+            return [];
+        }
+
+        return History::query()
+            ->where('chat_id', $this->chatId)
+            ->latest()
+            ->limit(50)
+            ->get()
+            ->reverse()
+            ->map(fn ($history) => new Message($history->role, $history->content))
+            ->all();
     }
 
     /**

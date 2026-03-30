@@ -2,7 +2,10 @@
 
 use App\Ai\Agents\Ange;
 use App\Services\TelegramService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
+
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Config::set('services.telegram.bot_secret_token', 'test-secret-token');
@@ -61,6 +64,18 @@ test('it handles successful webhook and calls telegram service', function () {
 
     $response->assertOk();
     $response->assertJson(['message' => 'Fake response for prompt: Hello']);
+
+    $this->assertDatabaseHas('histories', [
+        'chat_id' => '123',
+        'role' => 'user',
+        'content' => 'Hello',
+    ]);
+
+    $this->assertDatabaseHas('histories', [
+        'chat_id' => '123',
+        'role' => 'assistant',
+        'content' => 'Fake response for prompt: Hello',
+    ]);
 
     Ange::assertPrompted('Hello');
 });
