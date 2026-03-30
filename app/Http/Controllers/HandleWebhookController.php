@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\WebhookRequest;
 use App\Jobs\ProcessTelegramWebhookJob;
+use Illuminate\Support\Facades\Log;
 
 class HandleWebhookController extends Controller
 {
@@ -20,6 +21,8 @@ class HandleWebhookController extends Controller
         }
 
         ProcessTelegramWebhookJob::dispatch($chatId, $text)->afterResponse();
+
+        Log::info('Send response first');
 
         return response()->json(['message' => 'ok']);
     }
