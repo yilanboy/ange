@@ -4,7 +4,7 @@ WIP...
 
 ## Telegram Webhook API Call
 
-Format:
+Webhook API format:
 
 ```json
 {
@@ -27,6 +27,31 @@ Format:
         },
         "date": 1774769180,
         "text": "Hello!"
+    }
+}
+```
+
+Send message response:
+
+```json
+{
+    "ok": true,
+    "result": {
+        "message_id": 10,
+        "from": {
+            "id": 1234567890,
+            "is_bot": true,
+            "first_name": "Ange 🤖",
+            "username": "laravel_ai_agent_ange_bot"
+        },
+        "chat": {
+            "id": 123456789,
+            "first_name": "Allen",
+            "username": "allen",
+            "type": "private"
+        },
+        "date": 1774855246,
+        "text": "Ange is thinking... ⏳"
     }
 }
 ```

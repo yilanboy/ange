@@ -29,7 +29,7 @@ class HandleWebhookController extends Controller
             'content' => $text,
         ]);
 
-        $placeholder = $telegram->sendMessage($chatId, 'Ange is thinking... ⏳');
+        $placeholder = $telegram->sendMessage($chatId, "I'm thinking... ⏳");
 
         Log::info('Check placeholder: ', $placeholder);
 
