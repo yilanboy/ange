@@ -38,7 +38,7 @@ class ProcessTelegramWebhookJob implements ShouldQueue
 
         try {
             $response = Ange::make($this->chatId)
-                ->prompt($this->text, provider: Lab::Gemini);
+                ->prompt($this->text, provider: Lab::Gemini, model: 'gemini-3.1-flash-lite-preview');
         } catch (Exception $exception) {
             Log::error("AI model went wrong: ", [get_class($exception), $exception->getMessage()]);
             $response = "I'm sorry, I couldn't process your request at the moment.";
