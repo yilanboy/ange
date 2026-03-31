@@ -30,7 +30,7 @@ class ProcessTelegramWebhookJob implements ShouldQueue
      */
     public function handle(TelegramService $telegram): void
     {
-        $placeholder = $telegram->sendMessage($this->chatId, "I'm thinking... ⏳");
+        $placeholder = $telegram->sendMessage($this->chatId, TelegramService::toTelegramHtml("I'm thinking... ⏳"));
 
         Log::info('Check placeholder: ', $placeholder);
 
@@ -40,7 +40,7 @@ class ProcessTelegramWebhookJob implements ShouldQueue
             $response = Ange::make($this->chatId)
                 ->prompt($this->text, provider: Lab::Gemini, model: 'gemini-3.1-flash-lite-preview');
         } catch (Exception $exception) {
-            Log::error("AI model went wrong: ", [get_class($exception), $exception->getMessage()]);
+            Log::error('AI model went wrong: ', [get_class($exception), $exception->getMessage()]);
             $response = "I'm sorry, I couldn't process your request at the moment.";
         }
 
@@ -50,10 +50,12 @@ class ProcessTelegramWebhookJob implements ShouldQueue
             'content' => $this->text,
         ]);
 
+        $htmlResponse = TelegramService::toTelegramHtml((string) $response);
+
         if ($messageId) {
-            $telegram->editMessageText($this->chatId, $messageId, (string) $response);
+            $telegram->editMessageText($this->chatId, $messageId, $htmlResponse);
         } else {
-            $telegram->sendMessage($this->chatId, (string) $response);
+            $telegram->sendMessage($this->chatId, $htmlResponse);
         }
 
         History::create([
