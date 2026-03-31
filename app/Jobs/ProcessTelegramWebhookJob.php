@@ -9,7 +9,6 @@ use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
-use Laravel\Ai\Enums\Lab;
 
 class ProcessTelegramWebhookJob implements ShouldQueue
 {
@@ -39,7 +38,7 @@ class ProcessTelegramWebhookJob implements ShouldQueue
 
         try {
             $response = Ange::make($this->chatId)
-                ->prompt($this->text, provider: Lab::Gemini, model: 'gemini-3.1-flash-lite-preview');
+                ->prompt($this->text);
         } catch (Exception $exception) {
             Log::error('AI model went wrong: ', [get_class($exception), $exception->getMessage()]);
             $response = "I'm sorry, I couldn't process your request at the moment.";

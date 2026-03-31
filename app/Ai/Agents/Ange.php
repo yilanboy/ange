@@ -3,16 +3,25 @@
 namespace App\Ai\Agents;
 
 use App\Models\History;
+use Laravel\Ai\Attributes\MaxSteps;
+use Laravel\Ai\Attributes\Model;
+use Laravel\Ai\Attributes\Provider;
+use Laravel\Ai\Attributes\Temperature;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Contracts\Tool;
+use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Promptable;
 use Laravel\Ai\Providers\Tools\WebFetch;
 use Laravel\Ai\Providers\Tools\WebSearch;
 use Stringable;
 
+#[Provider(Lab::Gemini)]
+#[Model('gemini-3.1-flash-lite-preview')]
+#[MaxSteps(10)]
+#[Temperature(0.7)]
 class Ange implements Agent, Conversational, HasTools
 {
     use Promptable;
