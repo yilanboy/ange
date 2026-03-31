@@ -58,7 +58,11 @@ class TelegramService
         $html = Str::markdown($markdown, ['html_input' => 'strip']);
 
         // Convert headings to bold text with newlines.
-        $html = preg_replace('/<h[1-6]>(.*?)<\/h[1-6]>/s', "<b>$1</b>".self::TELEGRAM_NEW_LINE, $html);
+        $html = preg_replace(
+            '/<h[1-6]>(.*?)<\/h[1-6]>/s',
+            self::TELEGRAM_NEW_LINE."<b>$1</b>".self::TELEGRAM_NEW_LINE,
+            $html
+        );
 
         // Convert list items to bullet points.
         $html = preg_replace('/<li>(.*?)<\/li>/s', "• $1", $html);
