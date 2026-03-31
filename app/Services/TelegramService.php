@@ -51,38 +51,33 @@ class TelegramService
     }
 
     /**
-     * Convert markdown text to Telegram-compatible HTML.
+     * Convert Markdown text to Telegram-compatible HTML.
      */
     public static function toTelegramHtml(string $markdown): string
     {
-        $html = Str::markdown($markdown, ['html_input' => 'strip']);
-
-        // Remove all newlines first
-        $html = str_replace(['\r\n', '\r', '\n'], '', $html);
-
-        // Convert headings to bold text with newlines.
-        $html = preg_replace(
-            '/<h[1-6]>(.*?)<\/h[1-6]>/s',
-            self::TELEGRAM_NEW_LINE."<b>$1</b>".self::TELEGRAM_NEW_LINE,
-            $html
-        );
-
-        // Convert list items to bullet points.
-        $html = preg_replace('/<li>(.*?)<\/li>/s', "• $1", $html);
-
-        // Convert paragraphs to text with a newline.
-        $html = preg_replace('/<p>(.*?)<\/p>/s', "$1".self::TELEGRAM_NEW_LINE, $html);
-
-        // Add a newline after code blocks
-        $html = preg_replace('/<pre>(.*?)<\/pre>/s', "<pre>$1</pre>".self::TELEGRAM_NEW_LINE, $html);
-
-        // Strip remaining unsupported tags, keeping only Telegram-supported ones.
-        $html = strip_tags($html, [
-            'b', 'strong', 'i', 'em', 'u', 'ins', 's', 'strike', 'del', 'span',
-            'a', 'code', 'pre', 'blockquote',
-        ]);
-
-        return trim($html);
+        return Str::markdown($markdown, ['html_input' => 'strip'])
+                // Remove all newlines first
+                |> (fn($x) => str_replace(['\r\n', '\r', '\n'], '', $x))
+                // Convert headings to bold text with newlines.
+                |> (fn($x) => preg_replace(
+                    '/<h[1-6]>(.*?)<\/h[1-6]>/s',
+                    self::TELEGRAM_NEW_LINE."<b>$1</b>".self::TELEGRAM_NEW_LINE, $x
+                ))
+                // Convert list items to bullet points.
+                |> (fn($x) => preg_replace('/<li>(.*?)<\/li>/s', "• $1".self::TELEGRAM_NEW_LINE, $x))
+                // Convert paragraphs to text with a newline.
+                |> (fn($x) => preg_replace('/<p>(.*?)<\/p>/s', "$1".self::TELEGRAM_NEW_LINE, $x))
+                // Add a newline after code blocks
+                |> (fn($x) => preg_replace(
+                    '/<pre>(.*?)<\/pre>/s',
+                    "<pre>$1</pre>".self::TELEGRAM_NEW_LINE, $x
+                ))
+                // Strip remaining unsupported tags, keeping only Telegram-supported ones.
+                |> (fn($x) => strip_tags($x, [
+                    'b', 'strong', 'i', 'em', 'u', 'ins', 's', 'strike', 'del', 'span', 'a', 'code', 'pre',
+                    'blockquote',
+                ]))
+                |> (fn($x) => trim($x));
     }
 
     /**

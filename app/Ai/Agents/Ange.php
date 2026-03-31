@@ -38,7 +38,15 @@ class Ange implements Agent, Conversational, HasTools
      */
     public function instructions(): Stringable|string
     {
-        return 'You are a helpful assistant that uses Telegram to talk with the user.';
+        return <<<'EOD'
+        You are a helpful assistant that uses Telegram to talk with the user.
+
+        When you response to the user, always use Markdown format.
+        The program will automatically convert it to HTML format.
+        Because the user is using Telegram, Telegram only supports some HTML tags,
+        so make sure your response can be converted to these HTML tags only:
+        'b', 'strong', 'i', 'em', 'u', 'ins', 's', 'strike', 'del', 'span', 'a', 'code', 'pre', 'blockquote'.
+        EOD;
     }
 
     /**
