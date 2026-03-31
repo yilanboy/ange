@@ -30,9 +30,10 @@ class ProcessTelegramWebhookJob implements ShouldQueue
      */
     public function handle(TelegramService $telegram): void
     {
-        $placeholder = $telegram->sendMessage($this->chatId, TelegramService::toTelegramHtml("I'm thinking... ⏳"));
-
-        Log::info('Check placeholder: ', $placeholder);
+        $placeholder = $telegram->sendMessage(
+            $this->chatId,
+            TelegramService::toTelegramHtml("I'm thinking... ⏳")
+        );
 
         $messageId = $placeholder['result']['message_id'] ?? null;
 
