@@ -57,6 +57,9 @@ class TelegramService
     {
         $html = Str::markdown($markdown, ['html_input' => 'strip']);
 
+        // Remove all newlines first
+        $html = str_replace(['\r\n', '\r', '\n'], '', $html);
+
         // Convert headings to bold text with newlines.
         $html = preg_replace(
             '/<h[1-6]>(.*?)<\/h[1-6]>/s',
