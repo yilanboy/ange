@@ -9,6 +9,8 @@ use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Promptable;
+use Laravel\Ai\Providers\Tools\WebFetch;
+use Laravel\Ai\Providers\Tools\WebSearch;
 use Stringable;
 
 class Ange implements Agent, Conversational, HasTools
@@ -18,7 +20,9 @@ class Ange implements Agent, Conversational, HasTools
     /**
      * Create a new agent instance.
      */
-    public function __construct(public ?string $chatId = null) {}
+    public function __construct(public ?string $chatId = null)
+    {
+    }
 
     /**
      * Get the instructions that the agent should follow.
@@ -45,7 +49,7 @@ class Ange implements Agent, Conversational, HasTools
             ->limit(50)
             ->get()
             ->reverse()
-            ->map(fn ($history) => new Message($history->role, $history->content))
+            ->map(fn($history) => new Message($history->role, $history->content))
             ->all();
     }
 
@@ -56,6 +60,9 @@ class Ange implements Agent, Conversational, HasTools
      */
     public function tools(): iterable
     {
-        return [];
+        return [
+            new WebSearch,
+            new WebFetch,
+        ];
     }
 }
