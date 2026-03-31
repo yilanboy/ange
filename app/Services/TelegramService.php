@@ -61,7 +61,7 @@ class TelegramService
         $html = preg_replace('/<h[1-6]>(.*?)<\/h[1-6]>/s', "<b>$1</b>".self::TELEGRAM_NEW_LINE, $html);
 
         // Convert list items to bullet points.
-        $html = preg_replace('/<li>(.*?)<\/li>/s', "• $1".self::TELEGRAM_NEW_LINE, $html);
+        $html = preg_replace('/<li>(.*?)<\/li>/s', "• $1", $html);
 
         // Convert paragraphs to text with a newline.
         $html = preg_replace('/<p>(.*?)<\/p>/s', "$1".self::TELEGRAM_NEW_LINE, $html);
