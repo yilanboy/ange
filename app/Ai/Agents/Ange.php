@@ -63,7 +63,7 @@ class Ange implements Agent, Conversational, HasTools
         return History::query()
             ->where('chat_id', $this->chatId)
             ->latest()
-            ->limit(50)
+            ->limit(10)
             ->get()
             ->reverse()
             ->map(fn($history) => new Message($history->role, $history->content))

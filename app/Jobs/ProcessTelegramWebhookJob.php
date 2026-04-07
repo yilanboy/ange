@@ -14,6 +14,13 @@ class ProcessTelegramWebhookJob implements ShouldQueue
 {
     use Queueable;
 
+    public const array THINKING_MESSAGES = [
+        "Wait a moment... ⏳",
+        'Thinking... 🤔',
+        'Thinking about it... 😚',
+        "I'm cooking... 🧑‍🍳",
+    ];
+
     /**
      * Create a new job instance.
      */
@@ -29,9 +36,12 @@ class ProcessTelegramWebhookJob implements ShouldQueue
      */
     public function handle(TelegramService $telegram): void
     {
+        $thinkingMessageKey = array_rand(self::THINKING_MESSAGES);
+        $thinkingMessage = self::THINKING_MESSAGES[$thinkingMessageKey];
+
         $placeholder = $telegram->sendMessage(
             $this->chatId,
-            TelegramService::toTelegramHtml("I'm thinking... ⏳")
+            TelegramService::toTelegramHtml($thinkingMessage)
         );
 
         $messageId = $placeholder['result']['message_id'] ?? null;
