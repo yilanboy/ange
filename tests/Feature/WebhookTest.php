@@ -37,12 +37,24 @@ test('it returns 401 if secret token is invalid', function () {
     $response->assertJson(['message' => 'Unauthorized']);
 });
 
-test('it validates required fields', function () {
+test('it returns ok for empty payload', function () {
     $response = $this->withHeader('X-Telegram-Bot-Api-Secret-Token', 'test-secret-token')
         ->postJson('/webhook', []);
 
-    $response->assertStatus(422);
-    $response->assertJsonValidationErrors(['message.chat.id']);
+    $response->assertOk();
+    $response->assertJson(['message' => 'No chat ID or text found']);
+});
+
+test('it returns ok for non-message updates', function () {
+    $response = $this->withHeader('X-Telegram-Bot-Api-Secret-Token', 'test-secret-token')
+        ->postJson('/webhook', [
+            'edited_message' => [
+                'text' => 'Edited text',
+                'chat' => ['id' => 123],
+            ],
+        ]);
+
+    $response->assertOk();
 });
 
 test('it handles successful webhook and calls telegram service', function () {

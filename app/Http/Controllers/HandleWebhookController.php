@@ -2,15 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\WebhookRequest;
 use App\Jobs\ProcessTelegramWebhookJob;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class HandleWebhookController extends Controller
 {
     /**
      * Handle the incoming request.
      */
-    public function __invoke(WebhookRequest $request)
+    public function __invoke(Request $request)
+    {
+        try {
+            return $this->process($request);
+        } catch (Throwable $e) {
+            Log::error('Webhook error: ', [get_class($e), $e->getMessage()]);
+
+            return response()->json(['message' => 'ok']);
+        }
+    }
+
+    private function process(Request $request)
     {
         $text = $request->input('message.text');
         $chatId = $request->input('message.chat.id');
@@ -47,7 +60,7 @@ class HandleWebhookController extends Controller
     /**
      * Extract the sender's display name from the Telegram message.
      */
-    private function extractSenderName(WebhookRequest $request): ?string
+    private function extractSenderName(Request $request): ?string
     {
         $firstName = $request->input('message.from.first_name');
 
