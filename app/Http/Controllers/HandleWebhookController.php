@@ -25,7 +25,7 @@ class HandleWebhookController extends Controller
         if (in_array($chatType, ['group', 'supergroup'])) {
             $botUsername = config('services.telegram.bot_username');
 
-            if (! str_contains($text, "@{$botUsername}")) {
+            if (! str_starts_with($text, "@{$botUsername}")) {
                 return response()->json(['message' => 'ok']);
             }
 

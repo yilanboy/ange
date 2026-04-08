@@ -175,6 +175,26 @@ test('group chat message without bot mention is ignored', function () {
     ]);
 });
 
+test('group chat message with bot mention not at start is ignored', function () {
+    Ange::fake();
+
+    $response = $this->withHeader('X-Telegram-Bot-Api-Secret-Token', 'test-secret-token')
+        ->postJson('/webhook', [
+            'message' => [
+                'message_id' => 789,
+                'text' => 'Hey @test_bot what do you think?',
+                'chat' => ['id' => -100123, 'type' => 'supergroup'],
+            ],
+        ]);
+
+    $response->assertOk();
+    $response->assertJson(['message' => 'ok']);
+
+    $this->assertDatabaseMissing('histories', [
+        'chat_id' => '-100123',
+    ]);
+});
+
 test('group chat message with only bot mention and no text is ignored', function () {
     $response = $this->withHeader('X-Telegram-Bot-Api-Secret-Token', 'test-secret-token')
         ->postJson('/webhook', [
