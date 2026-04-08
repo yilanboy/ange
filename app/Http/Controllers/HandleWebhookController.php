@@ -15,11 +15,30 @@ class HandleWebhookController extends Controller
         $text = $request->input('message.text');
         $chatId = $request->input('message.chat.id');
 
-        if (! $chatId) {
-            return response()->json(['message' => 'No chat ID found']);
+        if (! $chatId || ! $text) {
+            return response()->json(['message' => 'No chat ID or text found']);
         }
 
-        ProcessTelegramWebhookJob::dispatch($chatId, $text);
+        $chatType = $request->input('message.chat.type', 'private');
+        $replyToMessageId = null;
+
+        if (in_array($chatType, ['group', 'supergroup'])) {
+            $botUsername = config('services.telegram.bot_username');
+
+            if (! str_contains($text, "@{$botUsername}")) {
+                return response()->json(['message' => 'ok']);
+            }
+
+            $text = trim(str_replace("@{$botUsername}", '', $text));
+
+            if ($text === '') {
+                return response()->json(['message' => 'ok']);
+            }
+
+            $replyToMessageId = $request->integer('message.message_id');
+        }
+
+        ProcessTelegramWebhookJob::dispatch($chatId, $text, $replyToMessageId);
 
         return response()->json(['message' => 'ok']);
     }

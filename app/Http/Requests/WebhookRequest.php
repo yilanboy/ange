@@ -23,7 +23,7 @@ class WebhookRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'message.text' => ['required', 'string'],
+            'message.text' => ['nullable', 'string'],
             'message.chat.id' => ['required', 'numeric:strict'],
         ];
     }

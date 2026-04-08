@@ -38,6 +38,7 @@ return [
     'telegram' => [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
         'bot_secret_token' => env('TELEGRAM_BOT_SECRET_TOKEN'),
+        'bot_username' => env('TELEGRAM_BOT_USERNAME', 'ange'),
     ],
 
 ];
