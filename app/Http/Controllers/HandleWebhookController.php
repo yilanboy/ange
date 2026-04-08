@@ -21,6 +21,7 @@ class HandleWebhookController extends Controller
 
         $chatType = $request->input('message.chat.type', 'private');
         $replyToMessageId = null;
+        $senderName = $this->extractSenderName($request);
 
         if (in_array($chatType, ['group', 'supergroup'])) {
             $botUsername = config('services.telegram.bot_username');
@@ -38,8 +39,24 @@ class HandleWebhookController extends Controller
             $replyToMessageId = $request->integer('message.message_id');
         }
 
-        ProcessTelegramWebhookJob::dispatch($chatId, $text, $replyToMessageId);
+        ProcessTelegramWebhookJob::dispatch($chatId, $text, $replyToMessageId, $senderName);
 
         return response()->json(['message' => 'ok']);
+    }
+
+    /**
+     * Extract the sender's display name from the Telegram message.
+     */
+    private function extractSenderName(WebhookRequest $request): ?string
+    {
+        $firstName = $request->input('message.from.first_name');
+
+        if (! $firstName) {
+            return null;
+        }
+
+        $lastName = $request->input('message.from.last_name');
+
+        return $lastName ? "{$firstName} {$lastName}" : $firstName;
     }
 }

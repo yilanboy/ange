@@ -29,16 +29,17 @@ class Ange implements Agent, Conversational, HasTools
     /**
      * Create a new agent instance.
      */
-    public function __construct(public ?string $chatId = null)
-    {
-    }
+    public function __construct(
+        public ?string $chatId = null,
+        public ?string $senderName = null,
+    ) {}
 
     /**
      * Get the instructions that the agent should follow.
      */
     public function instructions(): Stringable|string
     {
-        return <<<'EOD'
+        $instructions = <<<'EOD'
         You are a helpful assistant that uses Telegram to talk with the user.
 
         When you response to the user, always use Markdown format.
@@ -47,6 +48,14 @@ class Ange implements Agent, Conversational, HasTools
         so make sure your response can be converted to these HTML tags only:
         'b', 'strong', 'i', 'em', 'u', 'ins', 's', 'strike', 'del', 'span', 'a', 'code', 'pre', 'blockquote'.
         EOD;
+
+        if ($this->senderName) {
+            $instructions .= "\n\nYou are in a group chat. The current message is from \"{$this->senderName}\". "
+                .'In conversation history, user messages are prefixed with "[Name]: " to indicate who sent them. '
+                .'Address users by their name when appropriate.';
+        }
+
+        return $instructions;
     }
 
     /**
@@ -66,7 +75,7 @@ class Ange implements Agent, Conversational, HasTools
             ->limit(10)
             ->get()
             ->reverse()
-            ->map(fn($history) => new Message($history->role, $history->content))
+            ->map(fn ($history) => new Message($history->role, $history->content))
             ->all();
     }
 

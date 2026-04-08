@@ -28,6 +28,7 @@ class ProcessTelegramWebhookJob implements ShouldQueue
         public string|int $chatId,
         public string $text,
         public ?int $replyToMessageId = null,
+        public ?string $senderName = null,
     ) {
         //
     }
@@ -52,8 +53,13 @@ class ProcessTelegramWebhookJob implements ShouldQueue
 
         $messageId = $placeholder['result']['message_id'] ?? null;
 
+        $isGroupChat = $this->replyToMessageId !== null;
+        $userContent = $isGroupChat && $this->senderName
+            ? "[{$this->senderName}]: {$this->text}"
+            : $this->text;
+
         try {
-            $response = Ange::make($this->chatId)
+            $response = Ange::make($this->chatId, $this->senderName)
                 ->prompt($this->text);
         } catch (Exception $exception) {
             Log::error('AI model went wrong: ', [get_class($exception), $exception->getMessage()]);
@@ -62,8 +68,8 @@ class ProcessTelegramWebhookJob implements ShouldQueue
 
         History::create([
             'chat_id' => $this->chatId,
-            'role'    => 'user',
-            'content' => $this->text,
+            'role' => 'user',
+            'content' => $userContent,
         ]);
 
         $htmlResponse = TelegramService::toTelegramHtml((string) $response);
@@ -76,7 +82,7 @@ class ProcessTelegramWebhookJob implements ShouldQueue
 
         History::create([
             'chat_id' => $this->chatId,
-            'role'    => 'assistant',
+            'role' => 'assistant',
             'content' => (string) $response,
         ]);
     }
