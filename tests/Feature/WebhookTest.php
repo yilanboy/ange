@@ -132,43 +132,7 @@ test('it returns ok when message has no text', function () {
     $response->assertJson(['message' => 'No chat ID or text found']);
 });
 
-test('group chat message with bot mention triggers the job', function () {
-    Ange::fake();
-
-    $this->mock(TelegramService::class, function ($mock) {
-        $mock->shouldReceive('sendMessage')
-            ->once()
-            ->andReturn(['result' => ['message_id' => 456]]);
-
-        $mock->shouldReceive('editMessageText')
-            ->once()
-            ->with(-100123, 456, 'Fake response for prompt: Hello there')
-            ->andReturn([]);
-    });
-
-    $response = $this->withHeader('X-Telegram-Bot-Api-Secret-Token', 'test-secret-token')
-        ->postJson('/webhook', [
-            'message' => [
-                'message_id' => 789,
-                'text' => '@test_bot Hello there',
-                'chat' => ['id' => -100123, 'type' => 'supergroup'],
-                'from' => ['first_name' => 'John', 'last_name' => 'Doe'],
-            ],
-        ]);
-
-    $response->assertOk();
-    $response->assertJson(['message' => 'ok']);
-
-    $this->assertDatabaseHas('histories', [
-        'chat_id' => '-100123',
-        'role' => 'user',
-        'content' => '[John Doe]: Hello there',
-    ]);
-
-    Ange::assertPrompted('Hello there');
-});
-
-test('group chat message without bot mention is ignored', function () {
+test('group chat message without /botname command is ignored', function () {
     Ange::fake();
 
     $response = $this->withHeader('X-Telegram-Bot-Api-Secret-Token', 'test-secret-token')
@@ -185,76 +149,6 @@ test('group chat message without bot mention is ignored', function () {
 
     $this->assertDatabaseMissing('histories', [
         'chat_id' => '-100123',
-    ]);
-});
-
-test('group chat message with bot mention not at start is ignored', function () {
-    Ange::fake();
-
-    $response = $this->withHeader('X-Telegram-Bot-Api-Secret-Token', 'test-secret-token')
-        ->postJson('/webhook', [
-            'message' => [
-                'message_id' => 789,
-                'text' => 'Hey @test_bot what do you think?',
-                'chat' => ['id' => -100123, 'type' => 'supergroup'],
-            ],
-        ]);
-
-    $response->assertOk();
-    $response->assertJson(['message' => 'ok']);
-
-    $this->assertDatabaseMissing('histories', [
-        'chat_id' => '-100123',
-    ]);
-});
-
-test('group chat message with only bot mention and no text is ignored', function () {
-    $response = $this->withHeader('X-Telegram-Bot-Api-Secret-Token', 'test-secret-token')
-        ->postJson('/webhook', [
-            'message' => [
-                'message_id' => 789,
-                'text' => '@test_bot',
-                'chat' => ['id' => -100123, 'type' => 'supergroup'],
-            ],
-        ]);
-
-    $response->assertOk();
-    $response->assertJson(['message' => 'ok']);
-
-    $this->assertDatabaseMissing('histories', [
-        'chat_id' => '-100123',
-    ]);
-});
-
-test('group chat message stores sender first name only when last name is missing', function () {
-    Ange::fake();
-
-    $this->mock(TelegramService::class, function ($mock) {
-        $mock->shouldReceive('sendMessage')
-            ->once()
-            ->andReturn(['result' => ['message_id' => 456]]);
-
-        $mock->shouldReceive('editMessageText')
-            ->once()
-            ->andReturn([]);
-    });
-
-    $response = $this->withHeader('X-Telegram-Bot-Api-Secret-Token', 'test-secret-token')
-        ->postJson('/webhook', [
-            'message' => [
-                'message_id' => 789,
-                'text' => '@test_bot Hi',
-                'chat' => ['id' => -100123, 'type' => 'group'],
-                'from' => ['first_name' => 'Alice'],
-            ],
-        ]);
-
-    $response->assertOk();
-
-    $this->assertDatabaseHas('histories', [
-        'chat_id' => '-100123',
-        'role' => 'user',
-        'content' => '[Alice]: Hi',
     ]);
 });
 
@@ -314,4 +208,94 @@ test('private chat does not require bot mention', function () {
     $response->assertJson(['message' => 'ok']);
 
     Ange::assertPrompted('Hello');
+});
+
+test('group chat /botname command triggers the job', function () {
+    Ange::fake();
+
+    $this->mock(TelegramService::class, function ($mock) {
+        $mock->shouldReceive('sendMessage')
+            ->once()
+            ->andReturn(['result' => ['message_id' => 456]]);
+
+        $mock->shouldReceive('editMessageText')
+            ->once()
+            ->with(-100123, 456, 'Fake response for prompt: What is Laravel?')
+            ->andReturn([]);
+    });
+
+    $response = $this->withHeader('X-Telegram-Bot-Api-Secret-Token', 'test-secret-token')
+        ->postJson('/webhook', [
+            'message' => [
+                'message_id' => 789,
+                'text' => '/test_bot What is Laravel?',
+                'chat' => ['id' => -100123, 'type' => 'supergroup'],
+                'from' => ['first_name' => 'John'],
+            ],
+        ]);
+
+    $response->assertOk();
+    $response->assertJson(['message' => 'ok']);
+
+    $this->assertDatabaseHas('histories', [
+        'chat_id' => '-100123',
+        'role' => 'user',
+        'content' => '[John]: What is Laravel?',
+    ]);
+
+    Ange::assertPrompted('What is Laravel?');
+});
+
+test('group chat /botname@botname command triggers the job', function () {
+    Ange::fake();
+
+    $this->mock(TelegramService::class, function ($mock) {
+        $mock->shouldReceive('sendMessage')
+            ->once()
+            ->andReturn(['result' => ['message_id' => 456]]);
+
+        $mock->shouldReceive('editMessageText')
+            ->once()
+            ->with(-100123, 456, 'Fake response for prompt: What is PHP?')
+            ->andReturn([]);
+    });
+
+    $response = $this->withHeader('X-Telegram-Bot-Api-Secret-Token', 'test-secret-token')
+        ->postJson('/webhook', [
+            'message' => [
+                'message_id' => 789,
+                'text' => '/test_bot@test_bot What is PHP?',
+                'chat' => ['id' => -100123, 'type' => 'group'],
+                'from' => ['first_name' => 'Alice', 'last_name' => 'Smith'],
+            ],
+        ]);
+
+    $response->assertOk();
+    $response->assertJson(['message' => 'ok']);
+
+    $this->assertDatabaseHas('histories', [
+        'chat_id' => '-100123',
+        'role' => 'user',
+        'content' => '[Alice Smith]: What is PHP?',
+    ]);
+
+    Ange::assertPrompted('What is PHP?');
+});
+
+test('group chat /botname with no question text is ignored', function () {
+    $response = $this->withHeader('X-Telegram-Bot-Api-Secret-Token', 'test-secret-token')
+        ->postJson('/webhook', [
+            'message' => [
+                'message_id' => 789,
+                'text' => '/test_bot',
+                'chat' => ['id' => -100123, 'type' => 'supergroup'],
+            ],
+        ]);
+
+    $response->assertOk();
+    $response->assertJson(['message' => 'ok']);
+
+    $this->assertDatabaseMissing('histories', [
+        'chat_id' => '-100123',
+    ]);
 });

@@ -39,13 +39,9 @@ class HandleWebhookController extends Controller
         if (in_array($chatType, ['group', 'supergroup'])) {
             $botUsername = config('services.telegram.bot_username');
 
-            if (! str_starts_with($text, "@{$botUsername}")) {
-                return response()->json(['message' => 'ok']);
-            }
+            $text = $this->extractGroupMessageText($text, $botUsername);
 
-            $text = trim(str_replace("@{$botUsername}", '', $text));
-
-            if ($text === '') {
+            if ($text === null) {
                 return response()->json(['message' => 'ok']);
             }
 
@@ -55,6 +51,22 @@ class HandleWebhookController extends Controller
         ProcessTelegramWebhookJob::dispatch($chatId, $text, $replyToMessageId, $senderName);
 
         return response()->json(['message' => 'ok']);
+    }
+
+    /**
+     * Extract the question text from a /botname command in a group message.
+     *
+     * Returns null if the message should be ignored.
+     */
+    private function extractGroupMessageText(string $text, string $botUsername): ?string
+    {
+        if (preg_match('/^\/'.preg_quote($botUsername, '/').'(?:@'.preg_quote($botUsername, '/').')?\s+(.*)/s', $text, $matches)) {
+            $text = trim($matches[1]);
+
+            return $text !== '' ? $text : null;
+        }
+
+        return null;
     }
 
     /**
