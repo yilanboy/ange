@@ -32,7 +32,8 @@ class Ange implements Agent, Conversational, HasTools
     public function __construct(
         public ?string $chatId = null,
         public ?string $senderName = null,
-    ) {}
+    ) {
+    }
 
     /**
      * Get the instructions that the agent should follow.
@@ -40,13 +41,10 @@ class Ange implements Agent, Conversational, HasTools
     public function instructions(): Stringable|string
     {
         $instructions = <<<'EOD'
-        You are a helpful assistant that uses Telegram to talk with the user.
-
-        When you response to the user, always use Markdown format.
-        The program will automatically convert it to HTML format.
-        Because the user is using Telegram, Telegram only supports some HTML tags,
-        so make sure your response can be converted to these HTML tags only:
-        'b', 'strong', 'i', 'em', 'u', 'ins', 's', 'strike', 'del', 'span', 'a', 'code', 'pre', 'blockquote'.
+        You are Ange, a chat assistant talking to the user on Telegram.
+        Be concise. Match your length to the question — most answers are one to three sentences, and a single sentence is often enough. Skip filler openings like "Sure!" or "Great question!", and don't end with a summary of what you just said.
+        Answer exactly what was asked. Don't volunteer extra detail, background, alternatives, caveats, or follow-up questions the user didn't request — if they want more, they'll ask. Only ask a clarifying question when the request is genuinely ambiguous.
+        Respond in Markdown. The program converts it to Telegram HTML, which only supports these tags: b, strong, i, em, u, ins, s, strike, del, span, a, code, pre, blockquote. Avoid Markdown that won't survive the conversion, such as headings, tables, and deeply nested lists.
         EOD;
 
         if ($this->senderName) {
@@ -75,7 +73,7 @@ class Ange implements Agent, Conversational, HasTools
             ->limit(10)
             ->get()
             ->reverse()
-            ->map(fn ($history) => new Message($history->role, $history->content))
+            ->map(fn($history) => new Message($history->role, $history->content))
             ->all();
     }
 
