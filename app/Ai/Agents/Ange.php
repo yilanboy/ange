@@ -19,7 +19,7 @@ use Laravel\Ai\Providers\Tools\WebSearch;
 use Stringable;
 
 #[Provider(Lab::Gemini)]
-#[Model('gemini-3.1-flash-lite-preview')]
+#[Model('gemini-3.5-flash')]
 #[MaxSteps(10)]
 #[Temperature(0.7)]
 class Ange implements Agent, Conversational, HasTools
