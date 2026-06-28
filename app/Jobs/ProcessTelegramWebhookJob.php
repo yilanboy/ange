@@ -9,6 +9,7 @@ use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ProcessTelegramWebhookJob implements ShouldQueue
 {
@@ -73,9 +74,9 @@ class ProcessTelegramWebhookJob implements ShouldQueue
         ]);
 
         if ($messageId) {
-            $telegram->editMessage($this->chatId, $messageId, (string) $response);
+            $telegram->editMessage($this->chatId, $messageId, $this->convertToTelegramHtml((string) $response), ['parse_mode' => 'HTML']);
         } else {
-            $telegram->sendMessage($this->chatId, (string) $response, $replyParams);
+            $telegram->sendMessage($this->chatId, $this->convertToTelegramHtml((string) $response), array_merge($replyParams, ['parse_mode' => 'HTML']));
         }
 
         History::create([
@@ -83,5 +84,39 @@ class ProcessTelegramWebhookJob implements ShouldQueue
             'role' => 'assistant',
             'content' => (string) $response,
         ]);
+    }
+
+    /**
+     * Convert markdown text to HTML format supported by Telegram.
+     */
+    public function convertToTelegramHtml(string $markdown): string
+    {
+        $html = Str::markdown($markdown);
+
+        // Convert list items
+        $html = preg_replace('/<li>(.*?)<\/li>/is', '• $1'.PHP_EOL, $html);
+
+        // Convert headings to bold
+        $html = preg_replace('/<h[1-6]>(.*?)<\/h[1-6]>/is', '<b>$1</b>'.PHP_EOL.PHP_EOL, $html);
+
+        // Convert paragraphs to newlines
+        $html = preg_replace('/<p>(.*?)<\/p>\s*/is', '$1'.PHP_EOL.PHP_EOL, $html);
+
+        // Convert horizontal rules to separators
+        $html = preg_replace('/<hr\s*\/?>/i', '---'.PHP_EOL.PHP_EOL, $html);
+
+        // Convert line breaks
+        $html = preg_replace('/<br\s*\/?>/i', PHP_EOL, $html);
+
+        // Remove unsupported outer list container tags (ul, ol)
+        $html = preg_replace('/<\/?(ul|ol)>/i', '', $html);
+
+        // Strip any remaining unsupported HTML tags, keeping only Telegram-friendly tags.
+        // Telegram supports: <b>, <strong>, <i>, <em>, <u>, <ins>, <s>, <strike>, <del>, <span>, <a>, <code>, <pre>, <blockquote>
+        $allowedTags = '<b><strong><i><em><u><ins><s><strike><del><span><a><code><pre><blockquote>';
+        $html = strip_tags($html, $allowedTags);
+
+        // Trim any extra leading/trailing whitespace/newlines
+        return trim($html);
     }
 }

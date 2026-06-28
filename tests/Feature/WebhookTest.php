@@ -67,7 +67,7 @@ test('it handles successful webhook and calls telegram service', function () {
 
         $mock->shouldReceive('editMessage')
             ->once()
-            ->with(123, 456, 'Fake response for prompt: Hello')
+            ->with(123, 456, 'Fake response for prompt: Hello', ['parse_mode' => 'HTML'])
             ->andReturn([]);
     });
 
@@ -220,7 +220,7 @@ test('group chat /botname command triggers the job', function () {
 
         $mock->shouldReceive('editMessage')
             ->once()
-            ->with(-100123, 456, 'Fake response for prompt: What is Laravel?')
+            ->with(-100123, 456, 'Fake response for prompt: What is Laravel?', ['parse_mode' => 'HTML'])
             ->andReturn([]);
     });
 
@@ -256,7 +256,7 @@ test('group chat /botname@botname command triggers the job', function () {
 
         $mock->shouldReceive('editMessage')
             ->once()
-            ->with(-100123, 456, 'Fake response for prompt: What is PHP?')
+            ->with(-100123, 456, 'Fake response for prompt: What is PHP?', ['parse_mode' => 'HTML'])
             ->andReturn([]);
     });
 

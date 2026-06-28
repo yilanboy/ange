@@ -45,7 +45,7 @@ class Ange implements Agent, Conversational, HasTools
         Skip filler openings like "Sure!" or "Great question!", and don't end with a summary of what you just said.
         Answer exactly what was asked. Don't volunteer extra detail, background, alternatives, caveats, or follow-up questions the user didn't request — if they want more, they'll ask.
         Only ask a clarifying question when the request is genuinely ambiguous.
-        Respond in plain text. Do not use Markdown, HTML formatting, or any tags. All answers must be returned as plain text only.
+        Respond in Markdown. Use Markdown formatting (like bold, italic, inline code, code blocks, and lists) where appropriate to make your response clear and well-structured.
         EOD;
 
         if ($this->senderName) {
