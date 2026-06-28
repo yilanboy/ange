@@ -65,7 +65,7 @@ test('it handles successful webhook and calls telegram service', function () {
             ->once()
             ->andReturn(['result' => ['message_id' => 456]]);
 
-        $mock->shouldReceive('editMessageText')
+        $mock->shouldReceive('editMessage')
             ->once()
             ->with(123, 456, 'Fake response for prompt: Hello')
             ->andReturn([]);
@@ -160,7 +160,7 @@ test('private chat does not prefix sender name in history', function () {
             ->once()
             ->andReturn(['result' => ['message_id' => 456]]);
 
-        $mock->shouldReceive('editMessageText')
+        $mock->shouldReceive('editMessage')
             ->once()
             ->andReturn([]);
     });
@@ -191,7 +191,7 @@ test('private chat does not require bot mention', function () {
             ->once()
             ->andReturn(['result' => ['message_id' => 456]]);
 
-        $mock->shouldReceive('editMessageText')
+        $mock->shouldReceive('editMessage')
             ->once()
             ->andReturn([]);
     });
@@ -218,7 +218,7 @@ test('group chat /botname command triggers the job', function () {
             ->once()
             ->andReturn(['result' => ['message_id' => 456]]);
 
-        $mock->shouldReceive('editMessageText')
+        $mock->shouldReceive('editMessage')
             ->once()
             ->with(-100123, 456, 'Fake response for prompt: What is Laravel?')
             ->andReturn([]);
@@ -254,7 +254,7 @@ test('group chat /botname@botname command triggers the job', function () {
             ->once()
             ->andReturn(['result' => ['message_id' => 456]]);
 
-        $mock->shouldReceive('editMessageText')
+        $mock->shouldReceive('editMessage')
             ->once()
             ->with(-100123, 456, 'Fake response for prompt: What is PHP?')
             ->andReturn([]);

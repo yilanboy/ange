@@ -1,49 +1,75 @@
 <?php
 
 use App\Services\TelegramService;
+use Illuminate\Support\Facades\Http;
+use Tests\TestCase;
 
-test('it converts plain text to telegram html', function () {
-    $result = TelegramService::toTelegramHtml('Hello world');
+uses(TestCase::class);
 
-    expect($result)->toBe('Hello world');
+test('it sends message successfully', function () {
+    Http::fake([
+        'api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+    ]);
+
+    $service = new TelegramService;
+    $service->sendMessage(123, 'Hello');
+
+    Http::assertSent(function ($request) {
+        return str_contains($request->url(), 'sendMessage') &&
+            $request['chat_id'] === 123 &&
+            $request['text'] === 'Hello' &&
+            ! isset($request['parse_mode']);
+    });
 });
 
-test('it converts bold and italic markdown to html', function () {
-    $result = TelegramService::toTelegramHtml('**bold** and *italic*');
+test('it sends message with optional params', function () {
+    Http::fake([
+        'api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+    ]);
 
-    expect($result)->toContain('<strong>bold</strong>')
-        ->toContain('<em>italic</em>');
+    $service = new TelegramService;
+    $service->sendMessage(123, 'Hello', ['reply_parameters' => ['message_id' => 456]]);
+
+    Http::assertSent(function ($request) {
+        return str_contains($request->url(), 'sendMessage') &&
+            $request['chat_id'] === 123 &&
+            $request['text'] === 'Hello' &&
+            ! isset($request['parse_mode']) &&
+            $request['reply_parameters'] === ['message_id' => 456];
+    });
 });
 
-test('it converts headings to bold text', function () {
-    $result = TelegramService::toTelegramHtml('# Heading');
+test('it edits message successfully', function () {
+    Http::fake([
+        'api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+    ]);
 
-    expect($result)->toContain('<b>Heading</b>');
+    $service = new TelegramService;
+    $service->editMessage(123, 456, 'Edited');
+
+    Http::assertSent(function ($request) {
+        return str_contains($request->url(), 'editMessageText') &&
+            $request['chat_id'] === 123 &&
+            $request['message_id'] === 456 &&
+            $request['text'] === 'Edited' &&
+            ! isset($request['parse_mode']);
+    });
 });
 
-test('it converts code blocks to pre tags', function () {
-    $result = TelegramService::toTelegramHtml("```php\necho 'hello';\n```");
+test('it edits message with optional params', function () {
+    Http::fake([
+        'api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+    ]);
 
-    expect($result)->toContain('<pre>')
-        ->toContain('<code class="language-php">');
-});
+    $service = new TelegramService;
+    $service->editMessage(123, 456, 'Edited', ['reply_markup' => []]);
 
-test('it converts inline code to code tags', function () {
-    $result = TelegramService::toTelegramHtml('Use `artisan` command');
-
-    expect($result)->toContain('<code>artisan</code>');
-});
-
-test('it converts list items to bullet points', function () {
-    $result = TelegramService::toTelegramHtml("- first\n- second");
-
-    expect($result)->toContain('• first')
-        ->toContain('• second');
-});
-
-test('it strips unsupported html tags', function () {
-    $result = TelegramService::toTelegramHtml('Hello world');
-
-    expect($result)->not->toContain('<p>')
-        ->not->toContain('</p>');
+    Http::assertSent(function ($request) {
+        return str_contains($request->url(), 'editMessageText') &&
+            $request['chat_id'] === 123 &&
+            $request['message_id'] === 456 &&
+            $request['text'] === 'Edited' &&
+            ! isset($request['parse_mode']) &&
+            $request['reply_markup'] === [];
+    });
 });

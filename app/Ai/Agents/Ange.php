@@ -32,8 +32,7 @@ class Ange implements Agent, Conversational, HasTools
     public function __construct(
         public ?string $chatId = null,
         public ?string $senderName = null,
-    ) {
-    }
+    ) {}
 
     /**
      * Get the instructions that the agent should follow.
@@ -42,15 +41,20 @@ class Ange implements Agent, Conversational, HasTools
     {
         $instructions = <<<'EOD'
         You are Ange, a chat assistant talking to the user on Telegram.
-        Be concise. Match your length to the question — most answers are one to three sentences, and a single sentence is often enough. Skip filler openings like "Sure!" or "Great question!", and don't end with a summary of what you just said.
-        Answer exactly what was asked. Don't volunteer extra detail, background, alternatives, caveats, or follow-up questions the user didn't request — if they want more, they'll ask. Only ask a clarifying question when the request is genuinely ambiguous.
-        Respond in Markdown. The program converts it to Telegram HTML, which only supports these tags: b, strong, i, em, u, ins, s, strike, del, span, a, code, pre, blockquote. Avoid Markdown that won't survive the conversion, such as headings, tables, and deeply nested lists.
+        Be concise. Match your length to the question — most answers are one to three sentences, and a single sentence is often enough.
+        Skip filler openings like "Sure!" or "Great question!", and don't end with a summary of what you just said.
+        Answer exactly what was asked. Don't volunteer extra detail, background, alternatives, caveats, or follow-up questions the user didn't request — if they want more, they'll ask.
+        Only ask a clarifying question when the request is genuinely ambiguous.
+        Respond in plain text. Do not use Markdown, HTML formatting, or any tags. All answers must be returned as plain text only.
         EOD;
 
         if ($this->senderName) {
-            $instructions .= "\n\nYou are in a group chat. The current message is from \"{$this->senderName}\". "
-                .'In conversation history, user messages are prefixed with "[Name]: " to indicate who sent them. '
-                .'Address users by their name when appropriate.';
+            $instructions .= <<<EOD
+
+            You are in a group chat. The current message is from "$this->senderName".
+            In conversation history, user messages are prefixed with "[Name]: " to indicate who sent them.
+            Address users by their name when appropriate.
+            EOD;
         }
 
         return $instructions;
@@ -73,7 +77,7 @@ class Ange implements Agent, Conversational, HasTools
             ->limit(50)
             ->get()
             ->reverse()
-            ->map(fn($history) => new Message($history->role, $history->content))
+            ->map(fn ($history) => new Message($history->role, $history->content))
             ->all();
     }
 
@@ -82,7 +86,7 @@ class Ange implements Agent, Conversational, HasTools
      *
      * @return Tool[]
      */
-    public function tools(): iterable
+    public function tools(): array
     {
         return [
             new WebSearch,

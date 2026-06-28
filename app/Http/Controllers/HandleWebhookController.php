@@ -14,43 +14,40 @@ class HandleWebhookController extends Controller
      */
     public function __invoke(Request $request)
     {
+        Log::info('Received webhook request', ['request' => $request->all()]);
+
         try {
-            return $this->process($request);
+            $text = $request->input('message.text');
+            $chatId = $request->input('message.chat.id');
+
+            if (! $chatId || ! $text) {
+                return response()->json(['message' => 'No chat ID or text found']);
+            }
+
+            $chatType = $request->input('message.chat.type', 'private');
+            $replyToMessageId = null;
+            $senderName = $this->extractSenderName($request);
+
+            if (in_array($chatType, ['group', 'supergroup'])) {
+                $botUsername = config('services.telegram.bot_username');
+
+                $text = $this->extractGroupMessageText($text, $botUsername);
+
+                if ($text === null) {
+                    return response()->json(['message' => 'ok']);
+                }
+
+                $replyToMessageId = $request->integer('message.message_id');
+            }
+
+            ProcessTelegramWebhookJob::dispatch($chatId, $text, $replyToMessageId, $senderName);
+
+            return response()->json(['message' => 'ok']);
         } catch (Throwable $e) {
             Log::error('Webhook error: ', [get_class($e), $e->getMessage()]);
 
             return response()->json(['message' => 'ok']);
         }
-    }
-
-    private function process(Request $request)
-    {
-        $text = $request->input('message.text');
-        $chatId = $request->input('message.chat.id');
-
-        if (! $chatId || ! $text) {
-            return response()->json(['message' => 'No chat ID or text found']);
-        }
-
-        $chatType = $request->input('message.chat.type', 'private');
-        $replyToMessageId = null;
-        $senderName = $this->extractSenderName($request);
-
-        if (in_array($chatType, ['group', 'supergroup'])) {
-            $botUsername = config('services.telegram.bot_username');
-
-            $text = $this->extractGroupMessageText($text, $botUsername);
-
-            if ($text === null) {
-                return response()->json(['message' => 'ok']);
-            }
-
-            $replyToMessageId = $request->integer('message.message_id');
-        }
-
-        ProcessTelegramWebhookJob::dispatch($chatId, $text, $replyToMessageId, $senderName);
-
-        return response()->json(['message' => 'ok']);
     }
 
     /**
@@ -60,7 +57,9 @@ class HandleWebhookController extends Controller
      */
     private function extractGroupMessageText(string $text, string $botUsername): ?string
     {
-        if (preg_match('/^\/'.preg_quote($botUsername, '/').'(?:@'.preg_quote($botUsername, '/').')?\s+(.*)/s', $text, $matches)) {
+        if (preg_match('/^\/'.preg_quote($botUsername, '/').'(?:@'.preg_quote($botUsername, '/').')?\s+(.*)/s', $text,
+            $matches)) {
+
             $text = trim($matches[1]);
 
             return $text !== '' ? $text : null;

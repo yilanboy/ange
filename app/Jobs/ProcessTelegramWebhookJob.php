@@ -47,7 +47,7 @@ class ProcessTelegramWebhookJob implements ShouldQueue
 
         $placeholder = $telegram->sendMessage(
             $this->chatId,
-            TelegramService::toTelegramHtml($thinkingMessage),
+            $thinkingMessage,
             $replyParams,
         );
 
@@ -72,12 +72,10 @@ class ProcessTelegramWebhookJob implements ShouldQueue
             'content' => $userContent,
         ]);
 
-        $htmlResponse = TelegramService::toTelegramHtml((string) $response);
-
         if ($messageId) {
-            $telegram->editMessageText($this->chatId, $messageId, $htmlResponse);
+            $telegram->editMessage($this->chatId, $messageId, (string) $response);
         } else {
-            $telegram->sendMessage($this->chatId, $htmlResponse, $replyParams);
+            $telegram->sendMessage($this->chatId, (string) $response, $replyParams);
         }
 
         History::create([

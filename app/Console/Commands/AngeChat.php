@@ -69,13 +69,13 @@ class AngeChat extends Command
 
             History::create([
                 'chat_id' => $chatId,
-                'role'    => 'user',
+                'role' => 'user',
                 'content' => $input,
             ]);
 
             History::create([
                 'chat_id' => $chatId,
-                'role'    => 'assistant',
+                'role' => 'assistant',
                 'content' => $output->value(),
             ]);
 
