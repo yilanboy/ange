@@ -1,19 +1,18 @@
 {
     "agents": [
-        "junie",
-        "claude_code"
+        "junie"
     ],
+    "cloud": false,
     "guidelines": true,
     "mcp": true,
-    "nightwatch_mcp": false,
-    "packages": [
-        "laravel/ai"
-    ],
+    "nightwatch": false,
     "sail": false,
     "skills": [
+        "infer-conventions",
+        "ai-sdk-development",
         "laravel-best-practices",
+        "octane-development",
         "pest-testing",
-        "tailwindcss-development",
-        "ai-sdk-development"
+        "tailwindcss-development"
     ]
 }
