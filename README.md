@@ -37,7 +37,7 @@ you can iterate on prompts and tools without going through Telegram.
 
 - PHP **8.5+**
 - Composer
-- Node.js + npm (for Vite / Tailwind v4 assets)
+- Node.js + pnpm (for Vite / Tailwind v4 assets)
 - SQLite (default; configurable via `DB_CONNECTION`)
 - A Telegram bot — create one with [@BotFather](https://t.me/BotFather) to get
   a bot token, username, and a publicly reachable HTTPS URL for the webhook
@@ -55,7 +55,7 @@ git clone <repo-url> ange
 cd ange
 
 composer install
-npm install
+pnpm install
 
 cp .env.example .env
 php artisan key:generate
@@ -102,7 +102,7 @@ This runs, concurrently:
 - `php artisan queue:listen --tries=1 --timeout=0` — required, since the
   webhook dispatches `ProcessTelegramWebhookJob`
 - `php artisan pail --timeout=0` — tails application logs
-- `npm run dev` — Vite
+- `pnpm dev` — Vite
 
 If you only want to run pieces individually, those are the four commands.
 

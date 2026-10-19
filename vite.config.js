@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vite-plus';
 import laravel from 'laravel-vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 
@@ -14,5 +14,20 @@ export default defineConfig({
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },
+    },
+    fmt: {
+        tabWidth: 4,
+        singleQuote: true,
+        semi: true,
+        ignorePatterns: [
+            '.agents/**',
+            '.claude/**',
+            '.junie/**',
+            '.ai/**',
+            'AGENTS.md',
+            'CLAUDE.md',
+            'README.md',
+            'composer.json',
+        ],
     },
 });

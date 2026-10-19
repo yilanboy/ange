@@ -3,8 +3,10 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
-        "dev": "vite"
+        "build": "vp build",
+        "dev": "vp dev",
+        "check": "vp check",
+        "check:fix": "vp check --fix"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
@@ -12,6 +14,7 @@
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^3.0.0",
         "tailwindcss": "^4.0.0",
-        "vite": "^8.0.0"
+        "vite": "catalog:",
+        "vite-plus": "catalog:"
     }
 }
