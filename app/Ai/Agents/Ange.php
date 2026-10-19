@@ -17,6 +17,7 @@ use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Promptable;
 use Laravel\Ai\Providers\Tools\WebFetch;
 use Laravel\Ai\Providers\Tools\WebSearch;
+use Laravel\Mcp\Client\Primitives\Tool as McpToolPrimitive;
 use Laravel\Mcp\Facades\Mcp;
 use Stringable;
 
@@ -86,7 +87,7 @@ class Ange implements Agent, Conversational, HasTools
     /**
      * Get the tools available to the agent.
      *
-     * @return list<Tool|\Laravel\Mcp\Client\Primitives\Tool>
+     * @return list<Tool|McpToolPrimitive>
      */
     public function tools(): array
     {
@@ -96,13 +97,33 @@ class Ange implements Agent, Conversational, HasTools
         ];
 
         if (config('services.github.token')) {
-            $mcpTools = Cache::remember(
-                'mcp:github:tools:'.md5((string) config('services.github.token')),
-                now()->addDay(),
-                fn () => Mcp::client('github')->tools()
+            $client = Mcp::client('github');
+
+            $cacheKey = 'mcp:github:tools:json:'.md5((string) config('services.github.token'));
+
+            $json = Cache::remember($cacheKey, now()->addDay(), function () use ($client) {
+                $payloads = $client->tools()->map(fn (McpToolPrimitive $tool) => [
+                    'name' => $tool->name,
+                    'title' => $tool->title,
+                    'description' => $tool->description,
+                    'inputSchema' => $tool->inputSchema,
+                    'outputSchema' => $tool->outputSchema,
+                    'annotations' => $tool->annotations,
+                    '_meta' => $tool->meta,
+                ])->values()->all();
+
+                return json_encode($payloads, JSON_THROW_ON_ERROR);
+            });
+
+            /** @var list<array<string, mixed>> $toolPayloads */
+            $toolPayloads = json_decode((string) $json, true, 512, JSON_THROW_ON_ERROR);
+
+            $mcpTools = array_map(
+                fn (array $payload) => McpToolPrimitive::from($client, $payload),
+                $toolPayloads
             );
 
-            $tools = [...$tools, ...$mcpTools->values()->all()];
+            $tools = [...$tools, ...$mcpTools];
         }
 
         return $tools;
