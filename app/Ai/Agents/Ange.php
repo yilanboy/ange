@@ -3,6 +3,7 @@
 namespace App\Ai\Agents;
 
 use App\Models\History;
+use Illuminate\Support\Facades\Cache;
 use Laravel\Ai\Attributes\MaxSteps;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
@@ -16,6 +17,7 @@ use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Promptable;
 use Laravel\Ai\Providers\Tools\WebFetch;
 use Laravel\Ai\Providers\Tools\WebSearch;
+use Laravel\Mcp\Facades\Mcp;
 use Stringable;
 
 #[Provider(Lab::Gemini)]
@@ -84,13 +86,25 @@ class Ange implements Agent, Conversational, HasTools
     /**
      * Get the tools available to the agent.
      *
-     * @return Tool[]
+     * @return list<Tool|\Laravel\Mcp\Client\Primitives\Tool>
      */
     public function tools(): array
     {
-        return [
+        $tools = [
             new WebSearch,
             new WebFetch,
         ];
+
+        if (config('services.github.token')) {
+            $mcpTools = Cache::remember(
+                'mcp:github:tools:'.md5((string) config('services.github.token')),
+                now()->addDay(),
+                fn () => Mcp::client('github')->tools()
+            );
+
+            $tools = [...$tools, ...$mcpTools->values()->all()];
+        }
+
+        return $tools;
     }
 }

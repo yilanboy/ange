@@ -41,4 +41,12 @@ return [
         'bot_username' => env('TELEGRAM_BOT_USERNAME', 'ange'),
     ],
 
+    'github' => [
+        'token' => env('GITHUB_PERSONAL_ACCESS_TOKEN'),
+    ],
+
+    'github_mcp' => [
+        'url' => env('GITHUB_MCP_URL', 'https://api.githubcopilot.com/mcp/'),
+        'toolsets' => env('GITHUB_MCP_TOOLSETS', 'repos,issues,pull_requests'),
+    ],
 ];
